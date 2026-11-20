@@ -27,14 +27,23 @@ try:
     y = json.loads(get("https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?interval=1d&range=1mo"))
     r = y["chart"]["result"][0]; q = r["indicators"]["quote"][0]
     fut_last = r["meta"].get("regularMarketPrice") or q["close"][-1]
-    off = round(spot - fut_last, 2) if spot else 0.0
-    print("futures last:", fut_last, "offset:", off)
+    days = [datetime.datetime.fromtimestamp(ts, ZoneInfo("America/New_York")).strftime("%Y-%m-%d") for ts in r["timestamp"]]
+    # offset from the latest day we already have as spot (more stable than a live, delayed quote)
+    off = None
+    for i in range(len(days) - 1, -1, -1):
+        d = days[i]
+        if d in data and d != today and q["close"][i] and data[d].get("src") != "fut":
+            off = round(data[d]["c"] - q["close"][i], 2); print("offset from", d, off); break
+    if off is None:
+        off = round(spot - fut_last, 2) if spot else 0.0; print("offset from live quote", off)
     for i, ts in enumerate(r["timestamp"]):
         d = datetime.datetime.fromtimestamp(ts, ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
         o, h, l, c = (q[k][i] for k in ("open", "high", "low", "close"))
-        if None in (o, h, l, c) or (d in data and d != today):
+        if None in (o, h, l, c):
             continue
-        data[d] = {"d": d, "o": round(o + off, 2), "h": round(h + off, 2), "l": round(l + off, 2), "c": round(c + off, 2)}
+        if d in data and data[d].get("src") != "fut" and d != today:
+            continue
+        data[d] = {"d": d, "o": round(o + off, 2), "h": round(h + off, 2), "l": round(l + off, 2), "c": round(c + off, 2), "src": "fut"}
         print("filled", d)
 except Exception as e:
     print("futures failed:", e)
