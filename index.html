@@ -436,6 +436,9 @@
   .chartbox{height:110px;border-top:1px solid var(--line)}.chartbox.on{height:min(68vh,520px)}
   .chartbox .ph{height:100%;display:grid;place-items:center}
   .tfbar{padding:10px 14px 0}
+  .copybtn{margin-top:12px;width:100%;border:0;border-radius:14px;padding:13px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;color:#1a1200;background:linear-gradient(135deg,#ffe08a,#f5c542 55%,#d99a1e);box-shadow:0 10px 24px -10px rgba(245,197,66,.8)}
+  .copybtn:active{transform:scale(.98)}
+  .copymsg{font-size:12.5px;font-weight:700;color:#2ee6a6;text-align:center;margin-top:6px;min-height:16px}
   .note{font-size:12px;color:var(--muted);padding:10px 14px 14px}
 </style>
 </head>
@@ -454,6 +457,8 @@
       <div class="gc-price big" id="gPrice">—</div>
       <div class="gc-chg" id="gChg"></div>
       <div class="gc-asof" id="gAsof"></div>
+      <button type="button" class="copybtn" id="copyBtn"><span data-t="copy"></span></button>
+      <div class="copymsg" id="copyMsg"></div>
     </div>
     <div class="tiles" id="gUnits"></div>
   </section>
@@ -467,9 +472,9 @@
 <script>
 {
 const T={
-  km:{title:"តម្លៃមាសផ្ទាល់",spot:"មាស 24K · តម្លៃយោងអន្តរជាតិ",refresh:"Update",live:"ផ្ទាល់ · Update រៀងរាល់ 10 វិនាទី",err:"មិនអាចភ្ជាប់បាន កំពុងព្យាយាមម្ដងទៀត",open:"ពីពេលបើកទំព័រ",upd:"Update ចុងក្រោយ",u_kg:"គីឡូ",u_dam:"តម្លឹង",u_oz:"អោន",u_ji:"ជី",chart:"Chart ផ្ទាល់ · Pepperstone XAUUSD",loadChart:"📈 បើក Chart",note:"តម្លៃយោងមាស 24K អន្តរជាតិ (Spot XAU/USD) ពី gold-api.com តម្លៃហាងមានបូកថ្លៃបន្ថែម Chart ជា Pepperstone ពី TradingView អាចខុសគ្នាពីរបីដុល្លារ"},
-  zh:{title:"实时金价",spot:"24K 黄金 · 国际参考价",refresh:"刷新",live:"实时 · 每 10 秒更新",err:"连接失败，正在重试",open:"打开页面以来",upd:"最后更新",u_kg:"公斤 Kilo",u_dam:"Damlung（តម្លឹង）",u_oz:"盎司 Ounce",u_ji:"Ji（ជី）",chart:"实时图表 · Pepperstone XAUUSD",loadChart:"📈 打开图表",note:"国际 24K 现货参考价（XAU/USD），来自 gold-api.com，金店价格会加溢价。图表是 TradingView 的 Pepperstone，和上面价格可能差几美元。"},
-  en:{title:"Live Gold Price",spot:"24K gold · international reference",refresh:"Refresh",live:"Live · updates every 10 seconds",err:"Connection failed, retrying",open:"since page opened",upd:"Last update",u_kg:"Kilo",u_dam:"Damlung",u_oz:"Ounce",u_ji:"Ji",chart:"Live chart · Pepperstone XAUUSD",loadChart:"📈 Open chart",note:"International 24K spot reference (XAU/USD) from gold-api.com; shop prices include premiums. Chart is Pepperstone on TradingView and may differ by a few dollars."}
+  km:{copy:"📋 Copy តម្លៃ ទៅ To-Do",copied:"✅ បាន Copy {p} — ទៅ Paste នៅទំព័រមាសក្នុង To-Do",title:"តម្លៃមាសផ្ទាល់",spot:"មាស 24K · តម្លៃយោងអន្តរជាតិ",refresh:"Update",live:"ផ្ទាល់ · Update រៀងរាល់ 10 វិនាទី",err:"មិនអាចភ្ជាប់បាន កំពុងព្យាយាមម្ដងទៀត",open:"ពីពេលបើកទំព័រ",upd:"Update ចុងក្រោយ",u_kg:"គីឡូ",u_dam:"តម្លឹង",u_oz:"អោន",u_ji:"ជី",chart:"Chart ផ្ទាល់ · Pepperstone XAUUSD",loadChart:"📈 បើក Chart",note:"តម្លៃយោងមាស 24K អន្តរជាតិ (Spot XAU/USD) ពី gold-api.com តម្លៃហាងមានបូកថ្លៃបន្ថែម Chart ជា Pepperstone ពី TradingView អាចខុសគ្នាពីរបីដុល្លារ"},
+  zh:{copy:"📋 一键复制价格到待办网站",copied:"✅ 已复制 {p}，去待办网站金价页粘贴",title:"实时金价",spot:"24K 黄金 · 国际参考价",refresh:"刷新",live:"实时 · 每 10 秒更新",err:"连接失败，正在重试",open:"打开页面以来",upd:"最后更新",u_kg:"公斤 Kilo",u_dam:"Damlung（តម្លឹង）",u_oz:"盎司 Ounce",u_ji:"Ji（ជី）",chart:"实时图表 · Pepperstone XAUUSD",loadChart:"📈 打开图表",note:"国际 24K 现货参考价（XAU/USD），来自 gold-api.com，金店价格会加溢价。图表是 TradingView 的 Pepperstone，和上面价格可能差几美元。"},
+  en:{copy:"📋 Copy price for To-Do",copied:"✅ Copied {p} — paste it on the To-Do gold page",title:"Live Gold Price",spot:"24K gold · international reference",refresh:"Refresh",live:"Live · updates every 10 seconds",err:"Connection failed, retrying",open:"since page opened",upd:"Last update",u_kg:"Kilo",u_dam:"Damlung",u_oz:"Ounce",u_ji:"Ji",chart:"Live chart · Pepperstone XAUUSD",loadChart:"📈 Open chart",note:"International 24K spot reference (XAU/USD) from gold-api.com; shop prices include premiums. Chart is Pepperstone on TradingView and may differ by a few dollars."}
 };
 const OZ=31.1034768, U={kg:1000,dam:37.5,oz:OZ,ji:3.75}, TZ="Asia/Phnom_Penh";
 const ls=(k,v)=>{try{return v===undefined?localStorage.getItem(k):localStorage.setItem(k,v)}catch(_){return null}};
@@ -509,6 +514,12 @@ $("tfBar").onclick=e=>{ const b=e.target.closest("[data-tf]"); if(!b) return; tf
 $("langs").onclick=e=>{ const b=e.target.closest("[data-l]"); if(!b) return; lang=b.dataset.l; ls("kgl_lang",lang); paint(); };
 $("themeBtn").onclick=()=>{ const n=document.documentElement.dataset.theme==="light"?"dark":"light"; document.documentElement.dataset.theme=n; ls("kgl_theme",n); paint(); if(chartOn) chart(); };
 $("refBtn").onclick=tick;
+$("copyBtn").onclick=async()=>{
+  if(!price) return; const txt="KBTCGOLD|"+price.toFixed(2)+"|"+(at||new Date().toISOString());
+  let ok=false; try{ await navigator.clipboard.writeText(txt); ok=true; }catch(_){}
+  if(!ok){ const t=document.createElement("textarea"); t.value=txt; t.style.position="fixed"; t.style.opacity="0"; document.body.appendChild(t); t.select(); try{ ok=document.execCommand("copy"); }catch(_){} t.remove(); }
+  $("copyMsg").textContent=ok?L("copied").replace("{p}","$"+fmt(price)):txt;
+};
 try{ const c=JSON.parse(ls("kgl_last")||"null"); if(c&&c.p){ price=prev=first=c.p; at=c.at; } }catch(_){}
 paint(); tick(); setInterval(()=>{ if(!document.hidden) tick(); },10000);
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) tick(); });
