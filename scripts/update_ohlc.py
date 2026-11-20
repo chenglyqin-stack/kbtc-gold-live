@@ -12,7 +12,9 @@ def get(url):
 data = {c["d"]: c for c in json.load(open("ohlc.json"))}
 
 try:
-    rows = list(csv.DictReader(io.StringIO(get("https://stooq.com/q/d/l/?s=xauusd&i=d"))))
+    raw = get("https://stooq.com/q/d/l/?s=xauusd&i=d")
+    print("stooq head:", raw[:160].replace("\n", " | "))
+    rows = list(csv.DictReader(io.StringIO(raw)))
     n = 0
     for r in rows[-260:]:
         d = r.get("Date")
@@ -24,6 +26,15 @@ try:
     print("stooq rows:", n)
 except Exception as e:
     print("stooq failed:", e)
+
+if not any(k >= "2026-11-18" and data[k]["o"] != data[k]["c"] for k in data):
+    for sym in ("XAUUSD%3DX", "GC%3DF"):
+        try:
+            y = json.loads(get("https://query1.finance.yahoo.com/v8/finance/chart/" + sym + "?interval=1d&range=1mo"))
+            r = y["chart"]["result"][0]; q = r["indicators"]["quote"][0]
+            print("yahoo", sym, "last close", q["close"][-1], "days", len(r["timestamp"]))
+        except Exception as e:
+            print("yahoo", sym, "failed:", e)
 
 try:
     j = json.loads(get("https://api.gold-api.com/price/XAU"))
