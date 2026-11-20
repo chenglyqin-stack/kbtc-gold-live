@@ -495,6 +495,8 @@ function paint(){
   $("gAsof").textContent="🕒 "+L("upd")+": "+new Intl.DateTimeFormat("en-GB",{timeZone:TZ,day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(at?new Date(at):new Date())+" (Cambodia)";
   $("gUnits").innerHTML=["kg","dam","oz","ji"].map(k=>'<div class="tile img t-'+k+(k==="kg"?" main":k==="ji"?" wide":"")+'"><div class="tu">1 '+L("u_"+k)+'</div><div class="tg">'+U[k].toLocaleString("en-US",{maximumFractionDigits:4})+' g</div><div class="tp"><small>$</small>'+fmt(price/OZ*U[k])+'</div></div>').join("");
 }
+let ohlc=[];
+fetch("ohlc.json?"+Date.now()).then(r=>r.json()).then(j=>{ ohlc=Array.isArray(j)?j:[]; }).catch(()=>{});
 let busy=false;
 async function tick(){
   if(busy) return; busy=true;
@@ -515,7 +517,10 @@ $("langs").onclick=e=>{ const b=e.target.closest("[data-l]"); if(!b) return; lan
 $("themeBtn").onclick=()=>{ const n=document.documentElement.dataset.theme==="light"?"dark":"light"; document.documentElement.dataset.theme=n; ls("kgl_theme",n); paint(); if(chartOn) chart(); };
 $("refBtn").onclick=tick;
 $("copyBtn").onclick=async()=>{
-  if(!price) return; const txt="KBTCGOLD|"+price.toFixed(2)+"|"+(at||new Date().toISOString());
+  if(!price) return; let txt="KBTCGOLD|"+price.toFixed(2)+"|"+(at||new Date().toISOString());
+  if(ohlc.length){ const day=new Date().toISOString().slice(0,10), list=ohlc.slice(-150).map(c=>({...c}));
+    const last=list[list.length-1]; if(last&&last.d===day){ last.h=Math.max(last.h,price); last.l=Math.min(last.l,price); last.c=+price.toFixed(2); }
+    txt+="|C"+btoa(JSON.stringify(list.map(c=>[c.d,c.o,c.h,c.l,c.c]))); }
   let ok=false; try{ await navigator.clipboard.writeText(txt); ok=true; }catch(_){}
   if(!ok){ const t=document.createElement("textarea"); t.value=txt; t.style.position="fixed"; t.style.opacity="0"; document.body.appendChild(t); t.select(); try{ ok=document.execCommand("copy"); }catch(_){} t.remove(); }
   $("copyMsg").textContent=ok?L("copied").replace("{p}","$"+fmt(price)):txt;
